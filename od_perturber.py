@@ -15,18 +15,27 @@ class od_perturber():
    def __init__(self, 
                 demandFileName, 
                 perturbType, 
+                norm_mean=1, 
+                norm_sd=.1, 
+                uniform_low=.9, 
+                uniform_high=1.1,
                 nodeFileName=None, 
-                perturbBounds=None, 
-                norm_mean=0, 
-                norm_sd=1, 
-                uniform_low=-1, 
-                uniform_high=1):
+                boundingFunc=None,
+                bounds=None):
       """
       perturbType :                 choose between normal ("normal") or uniform ("uniform") distributed random perturbations
-      nodeFileName :                filename for node xy coordinates, to be used for isolating zones to perturb by geography
-      perturbBounds :               coordinate bounds for zone demands to perturb in the format of [xmin, xmax, ymin, ymax]
       norm_mean, norm_sd :          parameters to use for normally distributed perturbations
       uniform_low, uniform_high :   parameters to use for uniformly distributed perturbations
+
+      All three of the following must be provided to do bounded perturbation.
+      nodeFileName :                filename for node xy coordinates, to be used for isolating zones to perturb by geography
+      boundingFunc :                function that determines if an xy pair is elgibible for OD perturbation
+                                    omission implies that all coordinates should be perturbed
+                                    arguments should be in the form of (x, y, **bounds) where bounds is defined as below
+                                    od_perturber.bounding_box and od_perturber.bounding_circle are provided
+      bounds :                      dict of fixed arguments to bouding function, e.g. 
+                                    {'xmin': 0, 'xmax': 1, 'ymin': 0, 'ymax':1} for bounding_box
+                                    {'cx': 0, 'cy': 0, 'r': 1} for bounding_circle
       """
 
       if perturbType == "normal":
@@ -40,11 +49,10 @@ class od_perturber():
       self.perturbType = perturbType
 
       self.__readDemandFile(demandFileName)
-      self.nodelocs = None
-      self.perturbBounds = perturbBounds
-      if nodeFileName: #and perturbBounds:
-         self.nodelocs = self.__readNodeFile(nodeFileName)
-      self.__perturb()
+      nodelocs = None
+      if nodeFileName and boundingFunc and bounds:
+         nodelocs = self.__readNodeFile(nodeFileName)
+      self.__perturb(nodelocs=nodelocs, boundingFunc=boundingFunc, bounds=bounds)
       self.__dump_new_trips(demandFileName)
    
    class __BadFileFormatException(Exception):
@@ -197,16 +205,22 @@ class od_perturber():
       
       return nodelocs
 
-   def __perturb(self):
-      # TODO: implement perturb bounds
+   def __perturb(self, nodelocs, boundingFunc, bounds):
+
+      if (nodelocs is not None) and boundingFunc and bounds:
+         nodesToPerturb = np.array([boundingFunc(nodelocs[i,0],nodelocs[i,1],**bounds) for i in range(self.numZones)])
+         # TODO: how to pick OD pairs to perturb if only one of two nodes is ID'd for perturbing?
+         perturbMask = np.array([nodesToPerturb*nodesToPerturb[i] for i in range(self.numZones)], dtype=bool)
+      else:
+         perturbMask = np.ones(self.odmatrix.shape, dtype=bool)
 
       if self.perturbType == "normal":
-         self.odmatrix += np.random.normal(self.mu, self.sd, self.odmatrix.shape)
+         self.odmatrix[perturbMask] *= np.random.normal(self.mu, self.sd, self.odmatrix[perturbMask].shape)
       elif self.perturbType == "uniform":
-         self.odmatrix += np.random.uniform(self.a, self.b, self.odmatrix.shape)
+         self.odmatrix[perturbMask] *= np.random.uniform(self.a, self.b, self.odmatrix[perturbMask].shape)
       
       self.odmatrix[self.odmatrix < 0] = 0 # TODO: how to handle perturbing near-zero?
-      self.odmatrix = np.around(self.odmatrix, 1)
+      self.odmatrix = np.around(self.odmatrix, 6)
       self.totalDemand = self.odmatrix.sum()
    
    def __dump_new_trips(self, filename):
@@ -229,3 +243,11 @@ class od_perturber():
                if (j+1)%5==0:
                   line += '\n'
             outFile.write(line + '\n')
+
+   @staticmethod
+   def bounding_box(x, y, xmin, xmax, ymin, ymax):
+      return (x >= xmin) and (x <= xmax) and (y >= ymin) and (y <= ymax)
+   
+   @staticmethod
+   def bounding_circle(x, y, cx, cy, r):
+      return ((x-cx)**2 + (y-cy)**2)**(1/2) <= 2
