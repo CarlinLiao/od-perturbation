@@ -19,23 +19,20 @@ class od_perturber():
                 norm_sd=.1, 
                 uniform_low=.9, 
                 uniform_high=1.1,
-                nodeFileName=None, 
-                boundingFunc=None,
-                bounds=None):
+                nodesPerturbedAlways=[],
+                nodesPerturbedIfOrig=[],
+                nodesPerturbedIfDest=[]):
       """
       perturbType :                 choose between normal ("normal") or uniform ("uniform") distributed random perturbations
       norm_mean, norm_sd :          parameters to use for normally distributed perturbations
       uniform_low, uniform_high :   parameters to use for uniformly distributed perturbations
 
-      All three of the following must be provided to do bounded perturbation.
-      nodeFileName :                filename for node xy coordinates, to be used for isolating zones to perturb by geography
-      boundingFunc :                function that determines if an xy pair is elgibible for OD perturbation
-                                    omission implies that all coordinates should be perturbed
-                                    arguments should be in the form of (x, y, **bounds) where bounds is defined as below
-                                    od_perturber.bounding_box and od_perturber.bounding_circle are provided
-      bounds :                      dict of fixed arguments to bouding function, e.g. 
-                                    {'xmin': 0, 'xmax': 1, 'ymin': 0, 'ymax':1} for bounding_box
-                                    {'cx': 0, 'cy': 0, 'r': 1} for bounding_circle
+      At least one of nodesPerturbedAlways, nodesPerturbedIfOrig, nodesPerturbedIfDest must be provided to do selective perturbation.
+      If all three are empty, perturbation will be applied to all nodes.
+      
+      nodesPerturbedAlways :        node IDs that will be perturbed if it's an origin OR a destination
+      nodesPerturbedIfOrig :        node IDs that will be perturbed ONLY if it's an origin
+      nodesPerturbedIfDest :        node IDs that will be perturbed ONLY if it's a destination
       """
 
       if perturbType == "normal":
@@ -50,9 +47,9 @@ class od_perturber():
 
       self.__readDemandFile(demandFileName)
       nodelocs = None
-      if nodeFileName and boundingFunc and bounds:
-         nodelocs = self.__readNodeFile(nodeFileName)
-      self.__perturb(nodelocs=nodelocs, boundingFunc=boundingFunc, bounds=bounds)
+      self.__perturb(nodesPerturbedAlways=nodesPerturbedAlways,
+                     nodesPerturbedIfOrig=nodesPerturbedIfOrig,
+                     nodesPerturbedIfDest=nodesPerturbedIfDest)
       self.__dump_new_trips(demandFileName)
    
    class __BadFileFormatException(Exception):
@@ -161,56 +158,24 @@ class od_perturber():
       if totalDemandCheck != None:
          if self.totalDemand != totalDemandCheck:
             print("Warning: Total demand is %f compared to metadata value %f" % ( self.totalDemand, totalDemandCheck))
-   
-   def __readNodeFile(self, nodeFileName):
-      """
-      Reads node (latlong) data from a file in the TNTP format.
-      """
-      try:
-         with open(nodeFileName, "r") as nodeFile:
-            fileLines = nodeFile.read().splitlines()
 
-            # nodelocs = [None for i in range(self.numZones)]
-            nodelocs = np.empty((self.numZones, 2))
-            # nodelocs.fill(np.nan)
+   def __perturb(self, nodesPerturbedAlways, nodesPerturbedIfOrig, nodesPerturbedIfDest):
 
-            for line in fileLines:
-               # Ignore comments and blank lines
-               line = line.strip()
-               commentPos = line.find("~")
-               if commentPos >= 0: # strip comments
-                  line = line[:commentPos]
-               if len(line) == 0:
-                  continue
-                  
-               data = line.split() 
+      if (len(nodesPerturbedAlways) > 0) or (len(nodesPerturbedIfOrig) > 0) or (len(nodesPerturbedIfDest) > 0):
+         # origin is rows, destination is cols
+         
+         # combine always perturb nodes with origin or destination perturbation nodes as sets to prevent repeats
+         nodesPerturbedAlways = set([i-1 for i in nodesPerturbedAlways])
+         nodesPerturbedIfOrig = set([i-1 for i in nodesPerturbedIfOrig])
+         nodesPerturbedIfDest = set([i-1 for i in nodesPerturbedIfDest])
+         origsToPerturb = list(nodesPerturbedAlways.union(nodesPerturbedIfOrig))
+         destsToPerturb = list(nodesPerturbedAlways.union(nodesPerturbedIfDest))
 
-               # if there is a header, it starts with Node, node, or NodeID
-               if data[0].lower().find('node') >= 0:
-                  continue               
-
-               # Two possibilities, either semicolons end the line or don't
-               if not (len(data) == 3 or len(data) == 4):
-                  print("Node data line not formatted properly:\n %s" % line)
-                  raise self.__BadFileFormatException
-               
-               node = int(data[0])
-
-               if node <= self.numZones:
-                  nodelocs[node-1] = (float(data[1]), float(data[2]))
-                                    
-      except IOError:
-         print("\nError reading node file %s" % nodeFile)
-         traceback.print_exc(file=sys.stdout)
-      
-      return nodelocs
-
-   def __perturb(self, nodelocs, boundingFunc, bounds):
-
-      if (nodelocs is not None) and boundingFunc and bounds:
-         nodesToPerturb = np.array([boundingFunc(nodelocs[i,0],nodelocs[i,1],**bounds) for i in range(self.numZones)])
-         # TODO: how to pick OD pairs to perturb if only one of two nodes is ID'd for perturbing?
-         perturbMask = np.array([nodesToPerturb*nodesToPerturb[i] for i in range(self.numZones)], dtype=bool)
+         # mark all OD pairs with called out origin nodes for perturbing, then do the same for destination nodes
+         perturbMask = np.zeros(self.odmatrix.shape, dtype=bool)
+         perturbMask[origsToPerturb, :] = True
+         perturbMask[:, destsToPerturb] = True
+         print(perturbMask)
       else:
          perturbMask = np.ones(self.odmatrix.shape, dtype=bool)
 
@@ -243,11 +208,3 @@ class od_perturber():
                if (j+1)%5==0:
                   line += '\n'
             outFile.write(line + '\n')
-
-   @staticmethod
-   def bounding_box(x, y, xmin, xmax, ymin, ymax):
-      return (x >= xmin) and (x <= xmax) and (y >= ymin) and (y <= ymax)
-   
-   @staticmethod
-   def bounding_circle(x, y, cx, cy, r):
-      return ((x-cx)**2 + (y-cy)**2)**(1/2) <= 2
