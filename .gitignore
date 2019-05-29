@@ -2,3 +2,6 @@ __pycache__/*
 *.tntp
 tap-b/*
 .vscode/*
+.ipynb_checkpoints/*
+*.txt
+*.csv

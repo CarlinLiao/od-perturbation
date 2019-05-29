@@ -193,7 +193,7 @@ class od_perturber():
       Assuming the original filename ended with .tntp
       """
 
-      with open(filename[:-5] + "_perturbed_{}".format(self.perturbType) + filename[-5:], "w") as outFile:
+      with open("trips_perturbed.tntp", "w") as outFile:
          outFile.write(
             '<NUMBER OF ZONES> {}\n'.format(self.numZones) +
             '<TOTAL OD FLOW> {}\n'.format(self.totalDemand) +
