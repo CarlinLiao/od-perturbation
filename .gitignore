@@ -1,2 +1,4 @@
 __pycache__/*
 *.tntp
+tap-b/*
+.vscode/*
