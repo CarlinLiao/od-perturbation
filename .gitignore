@@ -5,3 +5,4 @@ tap-b/*
 .ipynb_checkpoints/*
 *.txt
 *.csv
+*.png
