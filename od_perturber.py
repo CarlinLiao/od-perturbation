@@ -59,7 +59,8 @@ class od_perturber():
       """
       pass  
 
-   def __readMetadata(self, lines):
+   @staticmethod
+   def __readMetadata(lines):
       """
       Read metadata tags and values from a TNTP file, returning a dictionary whose
       keys are the tags (strings between the <> characters) and corresponding values.
