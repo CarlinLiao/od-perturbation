@@ -157,7 +157,7 @@ class od_perturber():
          traceback.print_exc(file=sys.stdout)
       
       if totalDemandCheck != None:
-         if self.totalDemand != totalDemandCheck:
+         if not np.isclose(self.totalDemand, totalDemandCheck):
             print("Warning: Total demand is %f compared to metadata value %f" % ( self.totalDemand, totalDemandCheck))
 
    def __perturb(self, nodesPerturbedAlways, nodesPerturbedIfOrig, nodesPerturbedIfDest):
