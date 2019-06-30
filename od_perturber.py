@@ -166,9 +166,9 @@ class od_perturber():
          # origin is rows, destination is cols
          
          # combine always perturb nodes with origin or destination perturbation nodes as sets to prevent repeats
-         nodesPerturbedAlways = set([i-1 for i in nodesPerturbedAlways])
-         nodesPerturbedIfOrig = set([i-1 for i in nodesPerturbedIfOrig])
-         nodesPerturbedIfDest = set([i-1 for i in nodesPerturbedIfDest])
+         nodesPerturbedAlways = set([i-1 for i in nodesPerturbedAlways if i <= self.numZones])
+         nodesPerturbedIfOrig = set([i-1 for i in nodesPerturbedIfOrig if i <= self.numZones])
+         nodesPerturbedIfDest = set([i-1 for i in nodesPerturbedIfDest if i <= self.numZones])
          origsToPerturb = list(nodesPerturbedAlways.union(nodesPerturbedIfOrig))
          destsToPerturb = list(nodesPerturbedAlways.union(nodesPerturbedIfDest))
 
