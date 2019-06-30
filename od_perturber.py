@@ -176,7 +176,6 @@ class od_perturber():
          perturbMask = np.zeros(self.odmatrix.shape, dtype=bool)
          perturbMask[origsToPerturb, :] = True
          perturbMask[:, destsToPerturb] = True
-         print(perturbMask)
       else:
          perturbMask = np.ones(self.odmatrix.shape, dtype=bool)
 
