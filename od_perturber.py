@@ -114,7 +114,7 @@ class od_perturber():
                print("Warning: Not all metadata present in demand file, error checking will be limited.")
             
             # self.odmatrix = [[None for i in range(self.numZones)] for i in range(self.numZones)]
-            self.odmatrix = np.empty((self.numZones, self.numZones))
+            self.odmatrix = np.zeros((self.numZones, self.numZones))
             # self.odmatrix.fill(np.nan)
 
             for line in fileLines[metadata['END OF METADATA']:]:

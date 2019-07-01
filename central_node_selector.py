@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np 
 
-def central_node_selector(nodeFilename, proportion=.25, make_plot=True):
+def central_node_selector(nodeFilename, proportion=.25, make_plot=True, show_plot=True):
     '''
     Select some provided proportion of nodes closest to the center and return 
     both a set of node IDs and, optionally, a plot of the selected nodes.
@@ -32,7 +32,8 @@ def central_node_selector(nodeFilename, proportion=.25, make_plot=True):
         plt.scatter(df.loc[~selected_nodes,'X'], df.loc[~selected_nodes,'Y'], c='k')
         plt.scatter(df.loc[selected_nodes,'X'], df.loc[selected_nodes, 'Y'], c='r')
         plt.axis('off')
-        plt.show()
+        if show_plot:
+            plt.show()
         return nodes, fig
     else:
         return nodes
