@@ -1,8 +1,8 @@
-__pycache__/*
+**/__pycache__/*
 *.tntp
 tap-b/*
 .vscode/*
-.ipynb_checkpoints/*
+**/.ipynb_checkpoints/*
 *.txt
 *.csv
 *.png
