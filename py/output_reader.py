@@ -44,9 +44,12 @@ def capacity_reader(networkFileName):
         print("\nError reading network file %s" % networkFile)
         traceback.print_exc(file=sys.stdout) 
 
-def output_reader(outputFilename, networkFileName=None):
+def output_reader(outputFilename, networkFileName=None, numZones=0):
     '''
     Process output from `tap-b` and returns resulting DataFrame and total system travel time TSTT
+
+    numZones:   The number of zones in the network, used to filter out centroid connectors.
+                Ignored if value passed is None, 0, or the same number as there are nodes.
     '''
     df = pd.read_csv(outputFilename, sep=' ', index_col=1, skiprows=2, header=None, names=[
         'ID',
@@ -55,9 +58,20 @@ def output_reader(outputFilename, networkFileName=None):
         'cost',
         'der'
     ]).drop('ID', 1)
-    tstt = (df['cost']*df['flow']).sum()
+    pairs = df.index.str[1:-1].str.split(',').str
+    heads = pd.to_numeric(pairs[0])
+    tails = pd.to_numeric(pairs[1])
+    numNodes = pd.DataFrame([heads, tails]).values.max()
+
     if networkFileName:
         df['capacity'] = capacity_reader(networkFileName)
+        
+    if numZones < numNodes: # there are centroid connectors, so remove those
+        df.drop(df.index[((heads <= numZones) | (tails <= numZones))], 0, inplace=True)
+    
+    tstt = (df['cost']*df['flow']).sum()
+
+    if networkFileName:
         weighted_vc = (df['flow']**2 / (df['capacity'] * df['flow'].sum())).mean()
         return df, tstt, weighted_vc
     else:

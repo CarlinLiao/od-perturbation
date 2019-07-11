@@ -31,11 +31,10 @@ def tap_trial(
         nodesPerturbedIfOrig,
         nodesPerturbedIfDest
     )
-    subprocess.run("tap-b/bin/tap " + netFileName + " trips_perturbed.tntp >/dev/null", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL);
-    if returnDataFrame:
-        results = output_reader("full_log.txt", netFileName)
-    else:
-        results = output_reader("full_log.txt", netFileName)[1:]
+    subprocess.run("tap-b/bin/tap " + netFileName + " trips_perturbed.tntp >/dev/null", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    results = output_reader("full_log.txt", netFileName, numZones=od.numZones)
+    if not returnDataFrame:
+        results = results[1:]
     if returnODinfo:
         results = list(results)
         results.extend((od.totalDemand, od.odmatrix))
