@@ -80,8 +80,8 @@ def output_reader(outputFilename, networkFileName=None, numZones=0, true_flows=N
         toReturn += [weighted_vc, vmt]
     
     if true_flows is not None:
-        close_flow_link_pc = ((df['flow']/true_flows - 1).abs() <= 0.01).sum()/df.shape[0]
-        toReturn.append(close_flow_link_pc)
+        link_flows_within_1pc = ((df['flow']/true_flows - 1).abs() <= 0.01).sum()/df.shape[0]
+        toReturn.append(link_flows_within_1pc)
     
     if focus_link:
         focus_link_vc = df.loc[focus_link, 'flow']/df.loc[focus_link, 'capacity']
