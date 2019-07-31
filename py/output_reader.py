@@ -44,7 +44,7 @@ def net_reader(networkFileName):
         print("\nError reading network file %s" % networkFile)
         traceback.print_exc(file=sys.stdout) 
 
-def output_reader(outputFilename, networkFileName=None, numZones=0, true_costs=None, focus_link=None):
+def output_reader(outputFilename, networkFileName=None, numZones=0, true_costs=None, true_flows=None):
     '''
     Process output from `tap-b` and returns resulting DataFrame and total system travel time TSTT
 
@@ -80,11 +80,17 @@ def output_reader(outputFilename, networkFileName=None, numZones=0, true_costs=N
         toReturn += [weighted_vc, vmt]
     
     if true_costs is not None:
-        rmse = (((df['cost']-true_costs)**2).sum()/df.shape[0])**(1/2)
-        toReturn.append(rmse)
+        error_costs = df['cost']-true_costs
+        pc25_cost = error_costs.quantile(.25)
+        pc75_cost = error_costs.quantile(.75)
+        rmse_costs = ((error_costs**2).sum()/df.shape[0])**(1/2)
+        toReturn += [rmse_costs, pc25_cost, pc75_cost]
     
-    if focus_link:
-        focus_link_vc = df.loc[focus_link, 'flow']/df.loc[focus_link, 'capacity']
-        toReturn.append(focus_link_vc)
+    if true_flows is not None:
+        error_flows = df['flow']-true_flows
+        pc25_flows = error_flows.quantile(.25)
+        pc75_flows = error_flows.quantile(.75)
+        rmse_flows = ((error_flows**2).sum()/df.shape[0])**(1/2)
+        toReturn += [rmse_flows, pc25_flows, pc75_flows]
 
     return tuple(toReturn)
