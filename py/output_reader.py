@@ -44,13 +44,13 @@ def net_reader(networkFileName):
         print("\nError reading network file %s" % networkFile)
         traceback.print_exc(file=sys.stdout) 
 
-def output_reader(outputFilename, networkFileName=None, numZones=0, true_flows=None, focus_link=None):
+def output_reader(outputFilename, networkFileName=None, numZones=0, true_costs=None, focus_link=None):
     '''
     Process output from `tap-b` and returns resulting DataFrame and total system travel time TSTT
 
     numZones:   The number of zones in the network, used to filter out centroid connectors.
                 Ignored if value passed is None, 0, or the same number as there are nodes.
-    true_flows: pandas Series of flows with link IDs matching those of the input network.
+    true_costs: pandas Series of flows with link IDs matching those of the input network.
     focus_link: Link ID to return V/C value for. (Base case's most congested link suggested.)
     '''
     df = pd.read_csv(outputFilename, sep=' ', index_col=1, skiprows=2, header=None, names=[
@@ -75,12 +75,12 @@ def output_reader(outputFilename, networkFileName=None, numZones=0, true_flows=N
     toReturn = [df, tstt]
 
     if networkFileName:
-        weighted_vc = (df['flow']**2 / (df['capacity'] * df['flow'].sum())).mean()
+        weighted_vc = (df['flow']**2 / (df['capacity'] * df['flow'].sum())).sum()
         vmt = (df['flow']*df['length']).sum()
         toReturn += [weighted_vc, vmt]
     
-    if true_flows is not None:
-        rmse = (((df['flow']-true_flows)**2).sum()/df.shape[0])**(1/2)
+    if true_costs is not None:
+        rmse = (((df['cost']-true_costs)**2).sum()/df.shape[0])**(1/2)
         toReturn.append(rmse)
     
     if focus_link:
