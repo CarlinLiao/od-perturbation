@@ -15,7 +15,7 @@ def tap_trial(
             nodesPerturbedIfOrig=[],
             nodesPerturbedIfDest=[],
             true_costs=None,
-            focus_link=None,
+            true_flows=None,
             returnDataFrame=False,
             returnODinfo=False
 ):
@@ -34,7 +34,7 @@ def tap_trial(
         nodesPerturbedIfDest
     )
     subprocess.run("tap-b/bin/tap " + netFileName + " trips_perturbed.tntp >/dev/null", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    results = output_reader("full_log.txt", netFileName, numZones=od.numZones, true_costs=true_costs, focus_link=focus_link)
+    results = output_reader("full_log.txt", netFileName, numZones=od.numZones, true_costs=true_costs, true_flows=true_flows)
     if not returnDataFrame:
         results = results[1:]
     if returnODinfo:
