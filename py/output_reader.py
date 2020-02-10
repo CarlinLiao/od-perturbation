@@ -65,32 +65,36 @@ def output_reader(outputFilename, networkFileName=None, numZones=0, true_costs=N
     tails = pd.to_numeric(pairs[1])
     numNodes = pd.DataFrame([heads, tails]).values.max()
 
-    if networkFileName:
-        df[['capacity', 'length']] = net_reader(networkFileName)
+    # if networkFileName:
+    #     df[['capacity', 'length']] = net_reader(networkFileName)
         
-    if numZones < numNodes: # there are centroid connectors, so remove those
-        df.drop(df.index[((heads <= numZones) | (tails <= numZones))], 0, inplace=True)
+    # if numZones < numNodes: # there are centroid connectors, so remove those
+    #     df.drop(df.index[((heads <= numZones) | (tails <= numZones))], 0, inplace=True)
     
-    tstt = (df['cost']*df['flow']).sum()
-    toReturn = [df, tstt]
+    # tstt = (df['cost']*df['flow']).sum()
+    # toReturn = [df, tstt]
 
-    if networkFileName:
-        weighted_vc = (df['flow']**2 / (df['capacity'] * df['flow'].sum())).sum()
-        vmt = (df['flow']*df['length']).sum()
-        toReturn += [weighted_vc, vmt]
+    # if networkFileName:
+    #     weighted_vc = (df['flow']**2 / (df['capacity'] * df['flow'].sum())).sum()
+    #     vmt = (df['flow']*df['length']).sum()
+    #     toReturn += [weighted_vc, vmt]
     
-    if true_costs is not None:
-        error_costs = df['cost']-true_costs
-        pc25_cost = error_costs.quantile(.25)
-        pc75_cost = error_costs.quantile(.75)
-        rmse_costs = ((error_costs**2).sum()/df.shape[0])**(1/2)
-        toReturn += [rmse_costs, pc25_cost, pc75_cost]
+    # if true_costs is not None:
+    #     error_costs = df['cost']-true_costs
+    #     pc25_cost = error_costs.quantile(.25)
+    #     pc75_cost = error_costs.quantile(.75)
+    #     rmse_costs = ((error_costs**2).sum()/df.shape[0])**(1/2)
+    #     toReturn += [rmse_costs, pc25_cost, pc75_cost]
     
-    if true_flows is not None:
-        error_flows = df['flow']-true_flows
-        pc25_flows = error_flows.quantile(.25)
-        pc75_flows = error_flows.quantile(.75)
-        rmse_flows = ((error_flows**2).sum()/df.shape[0])**(1/2)
-        toReturn += [rmse_flows, pc25_flows, pc75_flows]
+    # if true_flows is not None:
+    #     error_flows = df['flow']-true_flows
+    #     pc25_flows = error_flows.quantile(.25)
+    #     pc75_flows = error_flows.quantile(.75)
+    #     rmse_flows = ((error_flows**2).sum()/df.shape[0])**(1/2)
+    #     toReturn += [rmse_flows, pc25_flows, pc75_flows]
 
-    return tuple(toReturn)
+    # RMSE flows
+    error_flows = df['flow']-true_flows
+    return ((error_flows**2).sum()/df.shape[0])**(1/2)
+
+    # return tuple(toReturn)

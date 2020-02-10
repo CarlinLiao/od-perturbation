@@ -2,43 +2,19 @@ import subprocess
 
 from py.od_perturber import od_perturber
 from py.output_reader import output_reader
+from py.gravity_model.gravity import od_matrix_from_params
 
-def tap_trial(
-            netFileName,
-            demandFileName, 
-            perturbType="normal", 
-            norm_mean=1, 
-            norm_sd=.1, 
-            uniform_low=.9, 
-            uniform_high=1.1,
-            nodesPerturbedAlways=[],
-            nodesPerturbedIfOrig=[],
-            nodesPerturbedIfDest=[],
-            true_costs=None,
-            focus_link=None,
-            returnDataFrame=False,
-            returnODinfo=False
-):
+def tap_trial(netFileName, true_flows, params):
     '''
     Generate a new TSTT calculation for a specific network, trip demands, and perturbation combination.
     '''
-    od = od_perturber(
-        demandFileName, 
-        perturbType, 
-        norm_mean, 
-        norm_sd, 
-        uniform_low, 
-        uniform_high,
-        nodesPerturbedAlways,
-        nodesPerturbedIfOrig,
-        nodesPerturbedIfDest
-    )
+    od = od_matrix_from_params(params)
     subprocess.run("tap-b/bin/tap " + netFileName + " trips_perturbed.tntp >/dev/null", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    results = output_reader("full_log.txt", netFileName, numZones=od.numZones, true_costs=true_costs, focus_link=focus_link)
-    if not returnDataFrame:
-        results = results[1:]
-    if returnODinfo:
-        results = list(results)
-        results.extend((od.totalDemand, od.odmatrix))
-        results = tuple(results)
-    return results
+    return output_reader("full_log.txt", netFileName, true_flows=true_flows)
+    # if not returnDataFrame:
+    #     results = results[1:]
+    # if returnODinfo:
+    #     results = list(results)
+    #     results.extend((od.totalDemand, od.odmatrix))
+    #     results = tuple(results)
+    # return results
