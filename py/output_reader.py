@@ -60,11 +60,10 @@ def output_reader(outputFilename, networkFileName=None, numZones=0, true_costs=N
         'cost',
         'der'
     ]).drop('ID', 1)
-    pairs = df.index.str[1:-1].str.split(',').str
-    heads = pd.to_numeric(pairs[0])
-    tails = pd.to_numeric(pairs[1])
-    print(df.head())
-    numNodes = pd.DataFrame([heads, tails]).values.max()
+    # pairs = df.index.str[1:-1].str.split(',').str
+    # heads = pd.to_numeric(pairs[0])
+    # tails = pd.to_numeric(pairs[1])
+    # numNodes = pd.DataFrame([heads, tails]).values.max()
 
     # if networkFileName:
     #     df[['capacity', 'length']] = net_reader(networkFileName)

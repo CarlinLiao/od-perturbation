@@ -8,7 +8,7 @@ def write_od_matrix(od_matrix):
 
     with open("trips_next.tntp", "w") as outFile:
         outFile.write(
-        '<NUMBER OF ZONES> {}\n'.format(576) +
+        '<NUMBER OF ZONES> {}\n'.format(od_matrix.shape[0]) +
         '<TOTAL OD FLOW> {}\n'.format(od_matrix.sum().sum()) +
         '<END OF METADATA>\n\n\n'
         )
