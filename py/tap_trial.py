@@ -12,7 +12,7 @@ def tap_trial(netFileName, true_flows, params, skip_solving=False):
     if skip_solving:
         return od
     subprocess.run("tap-b/bin/tap " + netFileName + " trips_next.tntp >/dev/null", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    return output_reader("full_log.txt", netFileName, true_flows=true_flows)
+    return output_reader("flows.txt", netFileName, true_flows=true_flows)
     # if not returnDataFrame:
     #     results = results[1:]
     # if returnODinfo:

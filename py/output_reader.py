@@ -53,13 +53,11 @@ def output_reader(outputFilename, networkFileName=None, numZones=0, true_costs=N
     true_costs: pandas Series of flows with link IDs matching those of the input network.
     focus_link: Link ID to return V/C value for. (Base case's most congested link suggested.)
     '''
-    df = pd.read_csv(outputFilename, sep=' ', index_col=1, skiprows=2, header=None, names=[
-        'ID',
+    df = pd.read_csv(outputFilename, sep=' ', index_col=0, skiprows=0, header=None, names=[
         'link',
         'flow',
-        'cost',
-        'der'
-    ]).drop('ID', 1)
+        'cost'
+    ])
     # pairs = df.index.str[1:-1].str.split(',').str
     # heads = pd.to_numeric(pairs[0])
     # tails = pd.to_numeric(pairs[1])
